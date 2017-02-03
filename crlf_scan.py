@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 '''
-# Author: Michael Stott (SecurityBird)
+# Author: Michael Stott
 # Date: 11/11/17
 #
 # Command line tool for scanning urls for CRLF injection.
