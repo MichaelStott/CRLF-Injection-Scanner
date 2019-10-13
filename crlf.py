@@ -8,12 +8,26 @@
 '''
 
 #import sys, getopt
-#from termcolor import colored
+#from termcolor import colored\
 import click
+from scanner import CrlfScanner
 
-@click.command()
+@click.group()
 def main():
     click.echo("Command line tool for detecting CRL injection.")
+
+@main.command("scan")
+def scan():
+    scanner = CrlfScanner()
+    urls = scanner.generate_vuln_urls("https://www.google.com")
+    click.echo("Beginning scan...")
+    success = []
+    for url in urls:
+        if scanner.scan(url):
+            success.append(url)
+            click.echo("CRLF detected: {}".format(url))
+        else:
+            click.echo("No CRLF detected: {}".format(url))
 
 if __name__ == "__main__":
     main()

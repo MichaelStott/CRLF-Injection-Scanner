@@ -28,23 +28,28 @@ class CrlfScanner():
     TIMEOUT = 5
 
     def __init__(self):
-        self.inj_str = DEFAULT_INJ
+        self.inj_str = self.DEFAULT_INJ
 
-    # Scan the url for crlf.
-    def scan(self, url):
-        # Store successful clrf attempts in buffer.
-        buffer = []
+    def generate_vuln_urls(self, url):
+        """ Generate URLS that may be vulnerable to CRLF injection.
+        """
+        vuln_urls = []
         for append in self.APPEND_LIST:
             for escape in self.ESCAPE_LIST:
-                crlf_url = url + append + escape + self.inj_str
-                session = requests.Session()
-                with eventlet.Timeout(self.TIMEOUT):
-                    try:
-                        session.get(crlf_url)
-                        print(colored(crlf_url, 'magenta'))
-                    except:
-                        print(colored("Error: %s" % crlf_url, 'red'))
-                    if 'param' in session.cookies.get_dict() and\
-                        'crlf' in session.cookies.get_dict().values():
-                        buffer.append(crlf_url)
-        return buffer
+                vuln_urls.append(url + append + escape + self.inj_str)
+        return vuln_urls
+    
+    def scan(self, url):
+        """ Scan target URL for CRLF injection
+        """
+        result = False
+        session = requests.Session()
+        with eventlet.Timeout(self.TIMEOUT):
+            try:
+                session.get(url)
+            except:
+                pass
+            if 'param' in session.cookies.get_dict() and\
+                'crlf' in session.cookies.get_dict().values():
+                result = True
+        return result
