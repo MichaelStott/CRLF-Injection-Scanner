@@ -13,7 +13,7 @@ import click, validators
 
 @click.group()
 def main():
-    click.echo("Command line tool for detecting CRL injection.")
+    click.echo("Command line tool for detecting CRLF injection.")
 
 @main.command("scan")
 @click.option("-u", "--urls",  help="Comma delimited urls.")
