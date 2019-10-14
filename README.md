@@ -1,5 +1,9 @@
-# CRLF-Injection-Scanner (in-progress)
+# CRLF-Injection-Scanner
 
-Command line tool for testing CRLF injection on list of domains.
+Command line tool for testing CRLF injection on a list of domains.
 
 ## Installation
+
+```
+$ python3 setup.py install
+```
