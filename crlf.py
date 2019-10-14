@@ -7,83 +7,73 @@
 # Command line tool for scanning urls for CRLF injection.
 '''
 
-#import sys, getopt
-#from termcolor import colored\
-import click
 from scanner import CrlfScanner
+
+import click, validators
 
 @click.group()
 def main():
     click.echo("Command line tool for detecting CRL injection.")
 
 @main.command("scan")
-def scan():
+@click.option("-u", "--urls",  help="Comma delimited urls.")
+@click.option("-i", "--ifile", help="File of urls to scan, separated by newlines")
+@click.option("-o", "--ofile", help="Output scan results to file.")
+def scan(urls, ifile, ofile):
+    """ Performs CRLF injection on the specified URLs.
+    """
     scanner = CrlfScanner()
-    urls = scanner.generate_vuln_urls("https://www.google.com")
+    target_urls = _parse_urls(urls, ifile)
+    vuln_urls = []
+    if not target_urls:
+        click.echo("No input found! Terminating.")
+        return
     click.echo("Beginning scan...")
-    success = []
-    for url in urls:
-        if scanner.scan(url):
-            success.append(url)
-            click.echo("CRLF detected: {}".format(url))
-        else:
-            click.echo("No CRLF detected: {}".format(url))
+    for url in target_urls:
+        crlf_urls = scanner.generate_vuln_urls(url.strip())
+        for crlf_url in crlf_urls:
+            if scanner.scan(crlf_url):
+                vuln_urls.append(crlf_url)
+                click.echo("CRLF detected: {}".format(crlf_url))
+            else:
+                click.echo("No CRLF detected: {}".format(crlf_url))
+    click.echo("Finished scan!")
+    if vuln_urls:
+        click.echo("CRLF injection detected at the following URLs:")
+        for vuln_url in vuln_urls:
+            click.echo(vuln_url)
+        if ofile:
+            with open(outputfile, 'a') as out:
+                for vuln_url in vuln_urls:
+                    out.write(vuln_url)
+                click.echo("Results saved to {}".format(ofile))
+    else:
+        click.echo("No CRLF injection detected...")
 
+def _parse_urls(urls, ifile):
+    """ Parses URLs from CLI args and input file.
+    """
+    target_urls = []
+    # Parse the URLs.
+    if urls:
+        target_urls.extend([_clean(url) for url in urls.split(",")])
+    if ifile:
+        with open(ifile) as fp:
+            for line in fp:
+                target_urls.append(_clean(line))
+    # Remove all nonvalid URLs.
+    for target_url in target_urls:
+        if not validators.domain(target_url):
+            click.echo("Invalid URL: {}, Skipping...".format(target_url))
+            target_urls.remove(target_url)
+    return target_urls
+
+def _clean(url):
+    for protocol in CrlfScanner.PROTOCOL_LIST:
+        if protocol + "://"  in url:
+            url = url.replace(protocol + "://", "")
+    url = url.strip()
+    return url
+                    
 if __name__ == "__main__":
     main()
-    
-"""
-if __name__ == "__main__":
-    # Get command line arguments for input and output files.
-    inputfile = ''
-    outputfile = ''
-    argv = sys.argv[1:]
-    try:
-       opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
-    except getopt.GetoptError:
-       print('test.py -i <inputfile> -o <outputfile>')
-       sys.exit(2)
-    for opt, arg in opts:
-       if opt == '-h':
-          print('crlf_scan.py -i <inputfile> -o <outputfile>')
-          print('inputfile : The file containing all the urls to scan.')
-          print('outputfile: The file containing all scan results.')
-          sys.exit()
-       elif opt in ("-i", "--ifile"):
-          inputfile = arg
-       elif opt in ("-o", "--ofile"):
-          outputfile = arg
-    if (not inputfile):
-        print(colored('Error: require input file. (Type -h for help.)', 'red'))
-        sys.exit(2)
-    fp = open(inputfile)
-
-    for i, line in enumerate(fp):    
-        print(colored("Starting scan of domain %s" % line.strip(), 'green'))
-        results = []
-        if not line.strip():
-            continue
-        for p in PROTOCOL_LIST:
-            try:
-                url = p + '://' + line.strip()
-                if not url.endswith('/'):
-                    url += '/'
-                print("Scanning %s." % url)
-                results.extend(CrlfScan().scan(url))
-            except:
-                print(colored("Error occured when scanning with %s protocol." % p, 'red'))
-
-    print(colored("Finished scanning!\n", 'green'))
-    if (len(results) == 0):
-        print(colored("Sorry, no crlf detected.", 'magenta'))
-    else:
-        print(colored("CRLF detected! Check the following urls:", 'blue'))
-        if not outputfile:
-            outputfile = 'crlf_results.txt'
-        ofile = open(outputfile, 'w')
-        for result in results:
-            print>>ofile, result
-            print(colored("%s" % result, 'blue'))
-        ofile.close()
-    fp.close()
-"""

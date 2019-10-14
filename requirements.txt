@@ -2,3 +2,4 @@ click
 colorama
 eventlet
 requests
+validators

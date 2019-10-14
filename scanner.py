@@ -1,16 +1,11 @@
 #!/usr/bin/python
 
-'''
-# Author: Michael Stott
-# Date: 11/11/19
-#
-# Command line tool for scanning urls for CRLF injection.
-'''
-
 import eventlet, requests
 
 
 class CrlfScanner():
+    """ Scans URLs for CRLF injection.
+    """
 
     # List of web protocols.
     PROTOCOL_LIST = ['http', 'https']
@@ -34,9 +29,13 @@ class CrlfScanner():
         """ Generate URLS that may be vulnerable to CRLF injection.
         """
         vuln_urls = []
-        for append in self.APPEND_LIST:
-            for escape in self.ESCAPE_LIST:
-                vuln_urls.append(url + append + escape + self.inj_str)
+        if not url.endswith('/'):
+            url += '/'
+        for protocol in self.PROTOCOL_LIST:
+            for append in self.APPEND_LIST:
+                for escape in self.ESCAPE_LIST:
+                    vuln_urls.append(protocol + "://" + url +\
+                                     append + escape + self.inj_str)
         return vuln_urls
     
     def scan(self, url):
@@ -47,6 +46,8 @@ class CrlfScanner():
         with eventlet.Timeout(self.TIMEOUT):
             try:
                 session.get(url)
+            except KeyboardInterrupt:
+                raise
             except:
                 pass
             if 'param' in session.cookies.get_dict() and\
