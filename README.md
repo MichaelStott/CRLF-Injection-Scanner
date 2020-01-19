@@ -15,7 +15,7 @@ Scan a target URL:
 $ crlf scan -u "www.google.com"
 ```
 
-Additionally, there is support for scanning URLs from a file, where URLs are separated by newlines.
+Additionally, there is support for scanning URLs from a file, where the URLs are separated by newlines.
 
 ```
 $ crlf scan -i "urls.txt"
