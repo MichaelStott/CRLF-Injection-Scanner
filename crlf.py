@@ -43,7 +43,7 @@ def scan(urls, ifile, ofile):
         for vuln_url in vuln_urls:
             click.echo(vuln_url)
         if ofile:
-            with open(outputfile, 'a') as out:
+            with open(ofile, 'a') as out:
                 for vuln_url in vuln_urls:
                     out.write(vuln_url)
                 click.echo("Results saved to {}".format(ofile))
